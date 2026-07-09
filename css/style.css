@@ -532,18 +532,76 @@ select.form-control { cursor: pointer; }
 .empty-state p { font-size: 14px; }
 
 /* ============================================
+   HAMBURGER & MOBILE NAV
+   ============================================ */
+.hamburger-btn {
+  display: none; width: 40px; height: 40px; border: none; background: transparent;
+  cursor: pointer; border-radius: var(--radius); color: var(--text-primary);
+  align-items: center; justify-content: center; transition: background 0.2s;
+}
+.hamburger-btn:hover { background: var(--bg); }
+
+.topbar-left {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 90; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.sidebar-overlay.active { display: block; }
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 @media (max-width: 768px) {
-  #sidebar { transform: translateX(-100%); }
-  #sidebar.open { transform: translateX(0); }
+  .hamburger-btn { display: flex; }
+
+  #sidebar {
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+  #sidebar.open {
+    transform: translateX(0);
+    box-shadow: 8px 0 24px rgba(0,0,0,0.2);
+  }
+
   #main-content { margin-left: 0; }
-  .scorecard-grid { grid-template-columns: repeat(2, 1fr); }
-  .clock-container { flex-direction: column; }
   #content-area { padding: 16px; }
   #topbar { padding: 0 16px; }
+
+  .scorecard-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .scorecard { padding: 16px; }
+  .scorecard-value { font-size: 22px; }
+  .scorecard-icon { width: 38px; height: 38px; }
+
+  .clock-container { flex-direction: column; }
+  .current-time-display .time { font-size: 36px; }
+
   .filter-bar { flex-direction: column; }
-  .modal { width: 95%; max-width: none; }
+
+  .card-header { padding: 14px 16px; }
+  .card-body { padding: 16px; }
+
+  .modal { width: 95%; max-width: none; border-radius: var(--radius-md); }
+  .modal-body { padding: 16px; }
+  .modal-header { padding: 14px 16px; }
+
+  .tab-item { padding: 8px 14px; font-size: 12px; }
+
+  .month-selector { flex-wrap: wrap; }
+  .flex-between { flex-wrap: wrap; gap: 10px; }
+
+  .intern-selector { flex-direction: column; align-items: stretch; }
+
+  .table-wrapper table { min-width: 600px; }
+}
+
+@media (max-width: 480px) {
+  .scorecard-grid { grid-template-columns: 1fr; }
+  .login-wrapper { padding: 16px; }
+  .login-card { padding: 24px; }
+  .login-brand h1 { font-size: 18px; }
 }
 
 /* ============================================
