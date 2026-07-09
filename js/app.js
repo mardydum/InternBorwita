@@ -198,6 +198,21 @@ function renderSidebar(user) {
   };
 }
 
+/* ---------- MOBILE SIDEBAR TOGGLE ---------- */
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+}
+
 /* ---------- NAVIGATION ---------- */
 async function navigateTo(pageId) {
   const user = getCurrentUser();
@@ -208,6 +223,9 @@ async function navigateTo(pageId) {
   if (!page) return;
 
   currentPage = pageId;
+
+  // Close sidebar on mobile after navigating
+  closeSidebar();
 
   // Update active nav
   document.querySelectorAll('.nav-item').forEach(el => {
