@@ -222,3 +222,130 @@ async function renderAdminDashboard() {
 
   render();
 }
+/* ============================================
+   DATABASE INTERN — with Contract Countdown
+   ============================================ */
+async function renderDatabaseInternPage() {
+  showLoader('Fetching intern database...');
+  let allInterns = [];
+  try {
+    allInterns = await getInterns();
+  } catch (e) {
+    hideLoader();
+    showToast('Error fetching intern database', 'danger');
+    return;
+  }
+  hideLoader();
+
+  function getMentorName(mentorId) {
+    const mentor = window._usersCache?.find(u => u.id === mentorId);
+    return mentor ? mentor.name : '—';
+  }
+
+  // Soonest-to-expire contracts shown first
+  allInterns.sort((a, b) => new Date(a.ContractEnd || a.contractEnd) - new Date(b.ContractEnd || b.contractEnd));
+
+  // Builds the colored countdown badge: green (>H-30), orange (<=H-30), red (<=H-14)
+  function contractCountdownBadge(contractEnd) {
+    if (!contractEnd) return `<span class="badge" style="background:var(--bg); color:var(--text-muted)">-</span>`;
+
+    const end = new Date(contractEnd);
+    const now = new Date();
+    const msPerDay = 1000 * 60 * 60 * 24;
+
+    // Normalize to midnight so the count doesn't shift within the same day
+    const endMid = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const daysLeft = Math.round((endMid - nowMid) / msPerDay);
+
+    if (daysLeft < 0) {
+      return `<span class="badge" style="background:var(--bg); color:var(--text-muted)">Kontrak berakhir</span>`;
+    }
+
+    let colorClass = 'badge-success';
+    if (daysLeft <= 14) colorClass = 'badge-danger';
+    else if (daysLeft <= 30) colorClass = 'badge-warning';
+
+    const label = daysLeft === 0 ? 'Berakhir hari ini' : `H-${daysLeft}`;
+    return `<span class="badge ${colorClass}">${label}</span>`;
+  }
+
+  function render(query = '') {
+    const content = document.getElementById('content-area');
+    const q = query.toLowerCase();
+    const filtered = q
+      ? allInterns.filter(i => JSON.stringify(i).toLowerCase().includes(q))
+      : allInterns;
+
+    content.innerHTML = `
+      <div class="filter-bar">
+        <div style="position:relative; max-width:280px; width:100%">
+          <input type="text" class="form-control" id="db-intern-search" placeholder="Search interns..." style="padding-left:36px" value="${query}">
+          <div style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; display:flex;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+        </div>
+        <div style="flex:1"></div>
+        <span class="text-sm text-secondary" style="display:flex; align-items:center; gap:6px">
+          Legend:
+          <span class="badge badge-success">&gt; H-30</span>
+          <span class="badge badge-warning">≤ H-30</span>
+          <span class="badge badge-danger">≤ H-14</span>
+        </span>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Database Intern</h3>
+          <span class="text-sm text-secondary">${filtered.length} records</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          ${filtered.length === 0
+            ? `<div class="empty-state">${ICONS.inbox}<p>No interns found</p></div>`
+            : `<div class="table-wrapper"><table>
+                <thead>
+                  <tr>
+                    <th>Name</th><th>Position</th><th>Mentor</th><th>Branch</th><th>Department</th>
+                    <th>Phone</th><th>Email</th><th>Status</th>
+                    <th>Contract Start</th><th>Contract End</th><th>Countdown</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filtered.map(intern => {
+                    const status = String(intern.Status || intern.status || 'active').toLowerCase().trim();
+                    const contractStart = intern.ContractStart || intern.contractStart;
+                    const contractEnd = intern.ContractEnd || intern.contractEnd;
+                    const mentorName = intern.MentorName || intern.mentorName || getMentorName(intern.MentorID || intern.mentorId);
+
+                    return `
+                      <tr>
+                        <td style="font-weight:500; white-space:nowrap">${intern.Name || intern.name}</td>
+                        <td style="white-space:nowrap">${intern.Position || intern.position}</td>
+                        <td style="white-space:nowrap">${mentorName}</td>
+                        <td style="white-space:nowrap">${intern.Branch || intern.branch}</td>
+                        <td style="white-space:nowrap">${intern.Department || intern.department}</td>
+                        <td style="white-space:nowrap">${intern.Phone || intern.phone}</td>
+                        <td style="white-space:nowrap">${intern.Email || intern.email}</td>
+                        <td>
+                          <span class="badge ${status === 'active' ? 'badge-success' : 'badge-danger'}">
+                            ${status === 'active' ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td style="white-space:nowrap">${formatShortDate(contractStart)}</td>
+                        <td style="white-space:nowrap">${formatShortDate(contractEnd)}</td>
+                        <td style="white-space:nowrap">${contractCountdownBadge(contractEnd)}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table></div>`
+          }
+        </div>
+      </div>
+    `;
+
+    document.getElementById('db-intern-search').oninput = (e) => render(e.target.value);
+  }
+
+  render();
+}
