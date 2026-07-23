@@ -41,6 +41,7 @@ const NAV_CONFIG = {
   ],
   admin: [
     { id: 'admin-dashboard', label: 'Dashboard', icon: 'barChart', render: renderAdminDashboard },
+    { id: 'database-intern', label: 'Database Intern', icon: 'briefcase', render: renderDatabaseInternPage },
   ],
 };
 
