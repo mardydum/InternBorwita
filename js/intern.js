@@ -263,7 +263,7 @@ async function renderInternDashboard() {
     return;
   }
 
-  const summary = { fullday: 0, halfday: 0, absent: 0 };
+  const summary = { fullday: 0, halfday: 0, absent: 0, clockInCount: 0, clockOutCount: 0 };
   attendanceList.forEach(a => {
     let eff = a.Type;
     if (eff === 'pending') {
@@ -275,6 +275,10 @@ async function renderInternDashboard() {
     if (eff === 'fullday') summary.fullday++;
     if (eff === 'halfday') summary.halfday++;
     if (eff === 'absent') summary.absent++;
+
+    // Count actual clock in / clock out events for this month
+    if (a.ClockIn) summary.clockInCount++;
+    if (a.ClockOut) summary.clockOutCount++;
   });
 
   const logEntries = logbookList.sort((a,b) => b.Date.localeCompare(a.Date));
@@ -297,6 +301,14 @@ async function renderInternDashboard() {
       <div class="scorecard">
         <div class="scorecard-icon red">${ICONS.x}</div>
         <div><div class="scorecard-value">${summary.absent}</div><div class="scorecard-label">Absent / Leave</div></div>
+      </div>
+      <div class="scorecard">
+        <div class="scorecard-icon blue">${ICONS.clock}</div>
+        <div><div class="scorecard-value">${summary.clockInCount}</div><div class="scorecard-label">Total Clock In</div></div>
+      </div>
+      <div class="scorecard">
+        <div class="scorecard-icon blue">${ICONS.logOut}</div>
+        <div><div class="scorecard-value">${summary.clockOutCount}</div><div class="scorecard-label">Total Clock Out</div></div>
       </div>
     </div>
 
