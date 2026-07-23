@@ -163,18 +163,8 @@ function mapRowToIntern(row, mentorMap) {
     ID: String(row.ID || row['ID'] || ''),
     Name: row.Nama || row['Nama'] || '',
     Position: row.Posisi || row['Posisi'] || '',
+    Company: row.Perusahaan || row['Perusahaan'] || '',
     Branch: row.Branch || row['Branch'] || '',
-    Department: row.Department || row['Department'] || '',
-    Phone: row['No. WA'] || row['No WA'] || '',
-    Email: row.Email || row['Email'] || '',
-    MentorID: mentorId,
-    MentorName: mentorMap[mentorId] || '',
-    ContractStart: parseDDMMYYYY(row.SOC || row['SOC']),
-    ContractEnd: parseDDMMYYYY(row.EOC || row['EOC']),
-    DaysRemaining: row['Sisa EOC'] || '',
-    Status: rawStatus,
-  };
-}
 
 function updateInternStatus(internId, status) {
   const sheet = getSheet('Data Intern');
