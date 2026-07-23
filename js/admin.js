@@ -195,9 +195,7 @@ async function renderAdminDashboard() {
       const text = row.innerText.toLowerCase();
       row.style.display = text.includes(q) ? '' : 'none';
     });
-  };
-
-  window.adminToggleStatus = async function(internId, currentStatus) {
+  };window.adminToggleStatus = async function(internId, currentStatus) {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
     if (newStatus === 'inactive') {
       if (!confirm('Deactivating this intern will prevent them from logging in. Continue?')) return;
