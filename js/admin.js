@@ -2,9 +2,28 @@
    ADMIN.JS — Admin Pages
    ============================================ */
 
+const COMPANY_LIST = ['Borwita Citra Prima', 'Borwita Indah', 'Karya Solusi Pintar', 'Borwita Putra Prima', 'Primart'];
+
+function companyTabBar(activeCompany, onChangeFnName) {
+  return `
+    <div class="tab-bar" style="flex-wrap:wrap">
+      <div class="tab-item ${activeCompany === 'all' ? 'active' : ''}" onclick="${onChangeFnName}('all')">Semua</div>
+      ${COMPANY_LIST.map(c => `
+        <div class="tab-item ${activeCompany === c ? 'active' : ''}" onclick="${onChangeFnName}('${c.replace(/'/g, "\\'")}')">${c}</div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function filterByCompany(interns, company) {
+  if (!company || company === 'all') return interns;
+  return interns.filter(i => String(i.Company || i.company || '').trim() === company);
+}
+
 async function renderAdminDashboard() {
   const now = new Date();
   let filterMode = 'all';
+  let companyFilter = 'all';
 
   function getMentorName(mentorId) {
     const mentor = window._usersCache?.find(u => u.id === mentorId);
@@ -43,10 +62,14 @@ async function renderAdminDashboard() {
       default:
         filteredInterns = allInterns;
     }
+    filteredInterns = filterByCompany(filteredInterns, companyFilter);
 
     const content = document.getElementById('content-area');
 
     content.innerHTML = `
+      <!-- Company Tabs -->
+      ${companyTabBar(companyFilter, 'setAdminCompanyFilter')}
+
       <!-- Scorecards -->
       <div class="scorecard-grid">
         <div class="scorecard" style="cursor:pointer" onclick="setAdminFilter('all')">
@@ -97,7 +120,7 @@ async function renderAdminDashboard() {
             : `<div class="table-wrapper"><table id="admin-intern-table">
                 <thead>
                   <tr>
-                    <th>Name</th><th>Position</th><th>Mentor</th><th>Branch</th><th>Department</th>
+                    <th>Name</th><th>Position</th><th>Mentor</th><th>Company</th><th>Branch</th><th>Department</th>
                     <th>Phone</th><th>Email</th>
                     <th>Status</th><th>Contract Start</th><th>Contract End</th><th>Action</th>
                   </tr>
@@ -107,6 +130,7 @@ async function renderAdminDashboard() {
                     const id = intern.ID || intern.id;
                     const name = intern.Name || intern.name;
                     const position = intern.Position || intern.position;
+                    const company = intern.Company || intern.company || '-';
                     const branch = intern.Branch || intern.branch;
                     const dept = intern.Department || intern.department;
                     const phone = intern.Phone || intern.phone;
@@ -127,6 +151,7 @@ async function renderAdminDashboard() {
                         <td style="font-weight:500; white-space:nowrap">${name}</td>
                         <td style="white-space:nowrap">${position}</td>
                         <td style="white-space:nowrap">${mentorName}</td>
+                        <td style="white-space:nowrap">${company}</td>
                         <td style="white-space:nowrap">${branch}</td>
                         <td style="white-space:nowrap">${dept}</td>
                         <td style="white-space:nowrap">${phone}</td>
@@ -160,6 +185,7 @@ async function renderAdminDashboard() {
   }
 
   window.setAdminFilter = function(mode) { filterMode = mode; render(); };
+  window.setAdminCompanyFilter = function(company) { companyFilter = company; render(); };
 
   window.adminLiveSearch = function(query) {
     const q = query.toLowerCase();
@@ -222,6 +248,7 @@ async function renderAdminDashboard() {
 
   render();
 }
+
 /* ============================================
    DATABASE INTERN — with Contract Countdown
    ============================================ */
@@ -244,6 +271,9 @@ async function renderDatabaseInternPage() {
 
   // Soonest-to-expire contracts shown first
   allInterns.sort((a, b) => new Date(a.ContractEnd || a.contractEnd) - new Date(b.ContractEnd || b.contractEnd));
+
+  let companyFilter = 'all';
+  let currentQuery = '';
 
   // Builds the colored countdown badge: green (>H-30), orange (<=H-30), red (<=H-14)
   function contractCountdownBadge(contractEnd) {
@@ -271,13 +301,18 @@ async function renderDatabaseInternPage() {
   }
 
   function render(query = '') {
+    currentQuery = query;
     const content = document.getElementById('content-area');
     const q = query.toLowerCase();
-    const filtered = q
-      ? allInterns.filter(i => JSON.stringify(i).toLowerCase().includes(q))
-      : allInterns;
+    let filtered = filterByCompany(allInterns, companyFilter);
+    filtered = q
+      ? filtered.filter(i => JSON.stringify(i).toLowerCase().includes(q))
+      : filtered;
 
     content.innerHTML = `
+      <!-- Company Tabs -->
+      ${companyTabBar(companyFilter, 'setDbCompanyFilter')}
+
       <div class="filter-bar">
         <div style="position:relative; max-width:280px; width:100%">
           <input type="text" class="form-control" id="db-intern-search" placeholder="Search interns..." style="padding-left:36px" value="${query}">
@@ -305,7 +340,7 @@ async function renderDatabaseInternPage() {
             : `<div class="table-wrapper"><table>
                 <thead>
                   <tr>
-                    <th>Name</th><th>Position</th><th>Mentor</th><th>Branch</th><th>Department</th>
+                    <th>Name</th><th>Position</th><th>Mentor</th><th>Company</th><th>Branch</th><th>Department</th>
                     <th>Phone</th><th>Email</th><th>Status</th>
                     <th>Contract Start</th><th>Contract End</th><th>Countdown</th>
                   </tr>
@@ -316,12 +351,14 @@ async function renderDatabaseInternPage() {
                     const contractStart = intern.ContractStart || intern.contractStart;
                     const contractEnd = intern.ContractEnd || intern.contractEnd;
                     const mentorName = intern.MentorName || intern.mentorName || getMentorName(intern.MentorID || intern.mentorId);
+                    const company = intern.Company || intern.company || '-';
 
                     return `
                       <tr>
                         <td style="font-weight:500; white-space:nowrap">${intern.Name || intern.name}</td>
                         <td style="white-space:nowrap">${intern.Position || intern.position}</td>
                         <td style="white-space:nowrap">${mentorName}</td>
+                        <td style="white-space:nowrap">${company}</td>
                         <td style="white-space:nowrap">${intern.Branch || intern.branch}</td>
                         <td style="white-space:nowrap">${intern.Department || intern.department}</td>
                         <td style="white-space:nowrap">${intern.Phone || intern.phone}</td>
@@ -346,6 +383,11 @@ async function renderDatabaseInternPage() {
 
     document.getElementById('db-intern-search').oninput = (e) => render(e.target.value);
   }
+
+  window.setDbCompanyFilter = function(company) {
+    companyFilter = company;
+    render(currentQuery);
+  };
 
   render();
 }
